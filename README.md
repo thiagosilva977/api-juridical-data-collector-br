@@ -40,8 +40,11 @@ print(response.status_code)
 print(response.json())
 ```  
 
+## Resultados
+
 #### Exemplo de resposta TJAL
 ```
+200
 {
    "search_status":"success",
    "description":"Value found for 0710802-55.2018.8.02.0001",
@@ -863,3 +866,13 @@ print(response.json())
 }
 
 ```  
+#### Exemplo de formato inválido de número de processo
+```
+200
+{'search_status': 'value_error', 'description': 'Value 007fff7-91.2008.8.06.0001 doesnt match the pattern.', 'data': []} 
+```
+#### Exemplo de documento não encontrado
+```
+200
+{'search_status': 'notfound', 'description': 'Value not found for 0070337-91.2008.8.06.0001', 'data': []}
+```
