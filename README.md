@@ -48,20 +48,6 @@ print(response.json())
    "data":[
       {
          "process_number":"0710802-55.2018.8.02.0001",
-         "classe":"None",
-         "area":"None",
-         "foro":"None",
-         "vara":"None",
-         "assunto":"None",
-         "data_distribuicao":"None",
-         "juiz":"None",
-         "valor_acao":"None",
-         "partes_processo":"None",
-         "lista_movimentacoes":"None",
-         "url_processo":"https://esaj.tjce.jus.br/cpopg/show.do?processo.numero=0710802-55.2018.8.02.0001"
-      },
-      {
-         "process_number":"0710802-55.2018.8.02.0001",
          "classe":"Procedimento Comum Cível",
          "area":"Cível",
          "foro":"Foro de Maceió",
