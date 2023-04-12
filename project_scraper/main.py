@@ -6,7 +6,7 @@ from scrapy.crawler import CrawlerProcess
 from fastapi import FastAPI
 from pydantic import BaseModel
 from project_scraper.spiders.my_spider import MySpiderSpider
-from project_scraper.spiders.tjal import TjalSpider
+from project_scraper.spiders.tj_al_and_ce import TjalSpider
 from uvicorn import run
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)

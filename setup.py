@@ -13,6 +13,7 @@ setup(
     install_requires=[
         "click>=8.1.2",
         "setuptools>=62.1.0",
+        "urllib3>=1.26.15",
         "requests>=2.27.1",
         "bs4>=0.0.1",
         "Shapely>=1.8.1.post1",

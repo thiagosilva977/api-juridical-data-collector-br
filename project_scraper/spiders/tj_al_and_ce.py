@@ -1,12 +1,10 @@
 import re
 import ssl
-import time
-import traceback
 
+import requests
 import scrapy
 import urllib3
 from bs4 import BeautifulSoup
-import requests
 
 
 class TjalSpider(scrapy.Spider):
@@ -33,10 +31,10 @@ class TjalSpider(scrapy.Spider):
                               f'processo.numero={self._input_url}')
                           ]
 
-        """urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
+        urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
                               f'processo.numero={self._input_url}')
 
-                          ]"""
+                          ]
 
         for url in urls_to_scrape:
             if 'cposg5' in url:
@@ -45,85 +43,26 @@ class TjalSpider(scrapy.Spider):
                 number_unified = self._input_url.split('.')[-1]
 
                 if 'esaj.tjce' in url:
-                    print('vindo para tj ce')
-
-
-                    headers = {
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        # 'Accept-Encoding': 'gzip, deflate, br',
-                        'Connection': 'keep-alive',
-                        'Referer': 'https://esaj.tjce.jus.br/cposg5/open.do',
-                        'Upgrade-Insecure-Requests': '1',
-                        'Sec-Fetch-Dest': 'document',
-                        'Sec-Fetch-Mode': 'navigate',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'Sec-Fetch-User': '?1',
-                    }
-
-                    params = {
-                        'conversationId': '',
-                        'paginaConsulta': '0',
-                        'cbPesquisa': 'NUMPROC',
-                        'numeroDigitoAnoUnificado': year_digit_unified,
-                        'foroNumeroUnificado': number_unified,
-                        'dePesquisaNuUnificado': [
-                            self._input_url,
-                            'UNIFICADO',
-                        ],
-                        'dePesquisa': '',
-                        'tipoNuProcesso': 'UNIFICADO',
-                    }
-
-                    response = requests.get('https://esaj.tjce.jus.br/cposg5/search.do', params=params,
-                                            headers=headers)
-                    print(response.status_code)
+                    yield scrapy.Request(str(f'https://esaj.tjce.jus.br/cposg5/search.do;?conversationId=&'
+                                             f'paginaConsulta=0'
+                                             f'&cbPesquisa=NUMPROC&numeroDigitoAnoUnificado={year_digit_unified}&'
+                                             f'foroNumeroUnificado={number_unified}&'
+                                             f'dePesquisaNuUnificado={self._input_url}&'
+                                             f'dePesquisaNuUnificado=UNIFICADO&dePesquisa=&tipoNuProcesso=UNIFICADO'),
+                                         callback=self.get_tjce_request)
 
                 else:
 
-                    headers = {
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        # 'Accept-Encoding': 'gzip, deflate, br',
-                        'Connection': 'keep-alive',
-                        'Referer': 'https://www2.tjal.jus.br/cposg5/open.do',
-                        # 'Cookie': 'JSESSIONID=4BA0DF23D4CAB01F441EC5D6E66B4BE3.cposg2',
-                        'Upgrade-Insecure-Requests': '1',
-                        'Sec-Fetch-Dest': 'document',
-                        'Sec-Fetch-Mode': 'navigate',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'Sec-Fetch-User': '?1',
-                    }
+                    yield scrapy.Request(str(f'https://www2.tjal.jus.br/cposg5/search.do;?conversationId=&'
+                                             f'paginaConsulta=0'
+                                             f'&cbPesquisa=NUMPROC&numeroDigitoAnoUnificado={year_digit_unified}&'
+                                             f'foroNumeroUnificado={number_unified}&'
+                                             f'dePesquisaNuUnificado={self._input_url}&'
+                                             f'dePesquisaNuUnificado=UNIFICADO&dePesquisa=&tipoNuProcesso=UNIFICADO'),
+                                         callback=self.get_tjce_request)
 
-                    params = {
-                        'conversationId': '',
-                        'paginaConsulta': '0',
-                        'cbPesquisa': 'NUMPROC',
-                        'numeroDigitoAnoUnificado': year_digit_unified,
-                        'foroNumeroUnificado': number_unified,
-                        'dePesquisaNuUnificado': [
-                            self._input_url,
-                            'UNIFICADO',
-                        ],
-                        'dePesquisa': '',
-                        'tipoNuProcesso': 'UNIFICADO',
-                    }
 
-                    response = requests.get('https://www2.tjal.jus.br/cposg5/search.do', params=params,
-                                            headers=headers)
 
-                soup = BeautifulSoup(response.text, 'html.parser')
-
-                process_code = soup.find('input', {'id': 'processoSelecionado'})['value']
-
-                print(process_code)
-                time.sleep(12112)
-
-                scrape_url = str(f"https://www2.tjal.jus.br/cposg5/show.do?processo.codigo={process_code}")
-                yield scrapy.Request(url=scrape_url,
-                                     headers=headers, callback=self.parse)
             else:
 
                 if 'esaj.tjce' in url:
@@ -159,6 +98,55 @@ class TjalSpider(scrapy.Spider):
 
                     yield scrapy.Request(url=url,
                                          headers=headers, callback=self.parse)
+
+    def get_tjce_request(self, response, **kwargs):
+
+        print(response)
+        if 'esaj.tjce.jus.br' in str(response.url):
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                # 'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Referer': 'https://esaj.tjce.jus.br/cposg5/open.do',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-User': '?1',
+            }
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            process_code = soup.find('input', {'id': 'processoSelecionado'})['value']
+
+            scrape_url = str(f"https://esaj.tjce.jus.br/cposg5/show.do?processo.codigo={process_code}")
+
+            yield scrapy.Request(url=scrape_url,
+                                 headers=headers, callback=self.parse)
+
+        else:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                # 'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': 'https://www2.tjal.jus.br/cpopg/open.do',
+                'Connection': 'keep-alive',
+                # 'Cookie': 'JSESSIONID=EB24AC9E02F1B0D2992C53E9510786DB.cpopg3',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-User': '?1',
+            }
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            process_code = soup.find('input', {'id': 'processoSelecionado'})['value']
+
+            scrape_url = str(f"https://www2.tjal.jus.br/cposg5/show.do?processo.codigo={process_code}")
+            yield scrapy.Request(url=scrape_url,
+                                 headers=headers, callback=self.parse)
 
     def parse(self, response, **kwargs):
         doc = {
@@ -323,7 +311,9 @@ class TjalSpider(scrapy.Spider):
 
             doc['partes_processo'] = processos
         except TypeError:
-            print(traceback.format_exc())
+            pass
+        except AttributeError:
+            pass
         try:
             movimentacoes = soup.find('h2', text='Movimentações').find_next('table').find_all('tr', {
                 'class': 'fundoClaro containerMovimentacao'})
@@ -350,11 +340,13 @@ class TjalSpider(scrapy.Spider):
                 lista_movimentacoes.append(dicionario_movimentacao)
             doc['lista_movimentacoes'] = lista_movimentacoes
         except TypeError:
-            print(traceback.format_exc())
+            pass
+        except AttributeError:
+            pass
         yield doc
 
 
-class CustomHttpAdapter (requests.adapters.HTTPAdapter):
+class CustomHttpAdapter(requests.adapters.HTTPAdapter):
     # "Transport adapter" that allows us to use custom ssl_context.
 
     def __init__(self, ssl_context=None, **kwargs):
