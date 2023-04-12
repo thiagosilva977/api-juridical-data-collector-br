@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            "scrape-url=project_scraper.main_scraper:main",
+            "crawl-process=project_scraper.main_scraper:main",
             "initialize-api=project_scraper.main:main_fastapi",
         ]
     },

@@ -27,8 +27,9 @@ def main_fastapi(port, host):
     run(app, port=port, host=host)
 
 
-@click.command("scrape-url")
-@click.option("--url", type=click.STRING, help="Website url to scrape data", default=None)
+@click.command("crawl-process")
+@click.option("--process-number", type=click.STRING, help="Process number to scrape data",
+              default='0710802-55.2018.8.02.0001')
 @click.option("--output-path", type=click.STRING, help="Your local path to save files", default=".")
 def main_scraper(url: str, output_path: str):
     """
@@ -88,4 +89,4 @@ if __name__ == '__main__':
     response = requests.post(url, json=json_data)
     print(response.json())"""
 
-    main_fastapi()
+    main_scraper()
