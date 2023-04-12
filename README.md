@@ -13,6 +13,10 @@
   </p>
 </div>
 
+## Descrição técnica
+### Fluxograma
+ <img src="https://user-images.githubusercontent.com/11250089/231607303-b3e14394-6099-4ae8-b95f-041f2fb099e8.png" alt="Logo" width="500" height="300">
+
 
 ## Docker
 ### Pull 
