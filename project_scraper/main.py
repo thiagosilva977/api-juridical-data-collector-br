@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -49,11 +50,15 @@ def main_scraper(process_number: str, output_path: str):
     logging.debug(str(f"Initializing data collector"))
     logging.info(str(f"Searching: {process_number}"))
     logging.info(str(f"Output path: {output_path}"))
-
+    data_to_return = {'search_status':'notfound',
+    'description':str(f"Value not found for {process_number}"),
+                      'data':[]}
     try:
         os.remove('collected_website_data.json')
     except FileNotFoundError:
         pass
+
+    feed_uri = str(f"{output_path}/collected_website_data.json")
 
     process = CrawlerProcess(settings={'BOT_NAME': 'project_scraper',
                                        'ROBOTSTXT_OBEY': False,
@@ -68,7 +73,7 @@ def main_scraper(process_number: str, output_path: str):
                                        'RETRY_HTTP_CODES': [500, 502, 503, 504, 522, 524, 408],
                                        'RETRY_TIMES': 5,
                                        'FEED_FORMAT': 'json',
-                                       'FEED_URI': str(f"{output_path}/collected_website_data.json"),
+                                       'FEED_URI': feed_uri,
                                        'SPIDER_MODULES': ['project_scraper.spiders'],
                                        'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor',
                                        'ITEM_PIPELINES': {
@@ -81,7 +86,16 @@ def main_scraper(process_number: str, output_path: str):
     process.crawl(TjalSpider, process_number)
     process.start()
 
-    print('aaaa')
+    try:
+        with open(feed_uri, 'r') as file:
+            data = json.load(file)
+        data_to_return['search_status'] = 'success'
+        data_to_return['description'] = str(f"Value found for {process_number}")
+        data_to_return['data'] = data
+    except json.decoder.JSONDecodeError:
+        pass
+
+    return data_to_return
 
 
 if __name__ == '__main__':
