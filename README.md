@@ -19,7 +19,7 @@ O desafio é fazer uma API que busque dados de um processo em todos os graus dos
 Geralmente o processo começa no primeiro grau e pode subir para o segundo. 
 
 A aplicação busca o processo em todos os graus e retorna suas informações.
-### Exemplos de processos jur
+### Exemplos de processos jurídicos
 
 ```
 0710802-55.2018.8.02.0001 , 0070337-91.2008.8.06.0001
