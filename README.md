@@ -13,10 +13,28 @@
   </p>
 </div>
 
-## Descrição técnica
+## Descrição
+O desafio é fazer uma API que busque dados de um processo em todos os graus dos Tribunais de Justiça de Alagoas (TJAL) e do Ceará (TJCE).
+
+Geralmente o processo começa no primeiro grau e pode subir para o segundo. 
+
+A aplicação busca o processo em todos os graus e retorna suas informações.
+### Exemplos de processos jur
+
+```
+0710802-55.2018.8.02.0001 , 0070337-91.2008.8.06.0001
+```
+
+### Implementação
+Para este processo, foi utilizado:
+- **FastAPI** para criação de uma API escalável, de alta performance e fácil desenvolvimento.
+- **Scrapy** para crawling dos dados em alta performance de forma assíncrona, aproveitando o bom padrão de estrutura de código e sua boa modularidade. 
+- **Docker** para uma boa portabilidade, sendo possível de ser executado em qualquer máquina e mantendo eficiência e escalabilidade.
+- **Click** para decorators de funções.
+- **Regex e BS4** para parsing dos dados.
+
 ### Fluxograma
  <img src="https://user-images.githubusercontent.com/11250089/231607303-b3e14394-6099-4ae8-b95f-041f2fb099e8.png" alt="Logo" width="500" height="300">
-
 
 ## Docker
 ### Pull 
