@@ -12,5 +12,4 @@ class ProjectScraperPipeline:
     def process_item(self, item, spider):
 
         print(item)
-        time.sleep(2112)
         return item

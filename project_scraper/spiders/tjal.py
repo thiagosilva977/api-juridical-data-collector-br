@@ -1,4 +1,5 @@
 import time
+import traceback
 
 import scrapy
 from bs4 import BeautifulSoup
@@ -49,6 +50,8 @@ class TjalSpider(scrapy.Spider):
         doc = {
             'classe': None,
             'area': None,
+            'foro': None,
+            'vara': None,
             'assunto': None,
             'data_distribuicao': None,
             'juiz': None,
@@ -62,78 +65,113 @@ class TjalSpider(scrapy.Spider):
         try:
             data_classe = soup.find('span', {'id': 'classeProcesso'})['title']
             print(data_classe)
+            doc['classe'] = data_classe
         except TypeError:
             pass
         try:
             data_assunto = soup.find('span', {'id': 'assuntoProcesso'})['title']
             print(data_assunto)
+            doc['assunto'] = data_assunto
         except TypeError:
             pass
 
         try:
             data_foro = soup.find('span', {'id': 'foroProcesso'})['title']
             print(data_foro)
+            doc['foro'] = data_foro
         except TypeError:
             pass
         try:
             data_vara = soup.find('span', {'id': 'varaProcesso'})['title']
             print(data_vara)
+            doc['vara'] = data_vara
         except TypeError:
             pass
         try:
             data_juiz = soup.find('span', {'id': 'juizProcesso'})['title']
             print(data_juiz)
+            doc['juiz'] = data_juiz
         except TypeError:
             pass
         try:
             data_area = soup.find('div', {'id': 'areaProcesso'}).find_next('span').text
             print(data_area)
+            doc['area'] = data_area
         except TypeError:
             pass
 
         try:
             data_distribuicao = soup.find('div', {'id': 'dataHoraDistribuicaoProcesso'}).text
             print(data_distribuicao)
+            doc['data_distribuicao'] = data_distribuicao
         except TypeError:
             pass
         try:
             data_valor = soup.find('div', {'id': 'valorAcaoProcesso'}).text
             print(data_valor)
+            doc['valor_acao'] = data_valor
         except TypeError:
             pass
 
-        table_partes = soup.find('table', {'id': 'tableTodasPartes'})
+        try:
+            table_partes = soup.find('table', {'id': 'tableTodasPartes'})
 
-        processos = []
-        for tr in table_partes.find_all("tr", class_="fundoClaro"):
-            tipo_autor = tr.find("td", class_="label").text.strip()
-            nome_parte = tr.find("td", class_="nomeParteEAdvogado").text.split('Advogado:')[0].strip()
-            advogados = []
-            # test = tr.find_all('span', {'class': 'mensagemExibindo'})
+            processos = []
+            for tr in table_partes.find_all("tr", class_="fundoClaro"):
+                tipo_autor = tr.find("td", class_="label").text.strip()
+                nome_parte = tr.find("td", class_="nomeParteEAdvogado").text.split('Advogado:')[0].strip()
+                advogados = []
 
-            list_split = tr.text.split('Advogado:')
-            print(list_split)
-            print(len(list_split))
-            for i in range(len(list_split)):
-                if i == 0:
-                    pass
-                else:
-                    current_text = list_split[i].replace('\n', '').replace('\t', '').replace('\xa0', '').strip()
-                    if 'Advogada:' in current_text:
-                        current_text = current_text.split('Advogada:')
-                        for item in current_text:
-
-                            advogados.append(item)
+                list_split = tr.text.split('Advogado:')
+                # print(list_split)
+                # print(len(list_split))
+                for i in range(len(list_split)):
+                    if i == 0:
+                        pass
                     else:
-                        advogados.append(current_text)
+                        current_text = list_split[i].replace('\n', '').replace('\t', '').replace('\xa0', '').strip()
+                        if 'Advogada:' in current_text:
+                            current_text = current_text.split('Advogada:')
+                            for item in current_text:
+                                advogados.append(item)
+                        else:
+                            advogados.append(current_text)
 
-            processo = {
-                "tipo_autor": tipo_autor,
-                "nome_parte": nome_parte,
-                "nome_advogados": advogados
-            }
-            processos.append(processo)
+                processo = {
+                    "tipo_autor": tipo_autor,
+                    "nome_parte": nome_parte,
+                    "nome_advogados": advogados
+                }
+                processos.append(processo)
 
+            doc['partes_processo'] = processos
+        except TypeError:
+            print(traceback.format_exc())
+        try:
+            movimentacoes = soup.find('h2', text='Movimentações').find_next('table').find_all('tr', {
+                'class': 'fundoClaro containerMovimentacao'})
+            lista_movimentacoes = []
+            for movimentacao in movimentacoes:
+                data_movimentacao = movimentacao.find('td', {'class': 'dataMovimentacao'}).text.strip()
+                descricao = movimentacao.find('td', {'class': 'descricaoMovimentacao'})
 
-        print('finishh')
-        time.sleep(1212)
+                italic_text = descricao.find('span', {'style': 'font-style: italic;'}).text.strip()
+                if italic_text == '':
+                    descricao_movimento = None
+                    status_movimento = descricao.text.strip()
+                else:
+                    descricao_movimento = italic_text.replace('\n', ' ').replace('\r', '')
+
+                    status_movimento = str(descricao).split('">')[1].split('<br/>')[0].strip()
+
+                    if '<a' in status_movimento:
+                        status_movimento = descricao.find('a', {'class': 'linkMovVincProc'}).text.strip()
+
+                dicionario_movimentacao = {'data_movimento': data_movimentacao,
+                                           'descricao_movimento': descricao_movimento,
+                                           'status_movimento': status_movimento}
+                lista_movimentacoes.append(dicionario_movimentacao)
+            doc['lista_movimentacoes'] = lista_movimentacoes
+        except TypeError:
+            print(traceback.format_exc())
+        yield doc

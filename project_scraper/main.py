@@ -81,6 +81,8 @@ def main_scraper(process_number: str, output_path: str):
     process.crawl(TjalSpider, process_number)
     process.start()
 
+    print('aaaa')
+
 
 if __name__ == '__main__':
     """import requests
