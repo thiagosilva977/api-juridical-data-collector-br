@@ -1,8 +1,10 @@
 import re
+import ssl
 import time
 import traceback
 
 import scrapy
+import urllib3
 from bs4 import BeautifulSoup
 import requests
 
@@ -31,10 +33,10 @@ class TjalSpider(scrapy.Spider):
                               f'processo.numero={self._input_url}')
                           ]
 
-        urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cpopg/show.do?'
+        """urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
                               f'processo.numero={self._input_url}')
 
-                          ]
+                          ]"""
 
         for url in urls_to_scrape:
             if 'cposg5' in url:
@@ -43,6 +45,9 @@ class TjalSpider(scrapy.Spider):
                 number_unified = self._input_url.split('.')[-1]
 
                 if 'esaj.tjce' in url:
+                    print('vindo para tj ce')
+
+
                     headers = {
                         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -71,8 +76,10 @@ class TjalSpider(scrapy.Spider):
                         'tipoNuProcesso': 'UNIFICADO',
                     }
 
-                    response = requests.get('https://esaj.tjce.jus.br/cposg5/open.do', params=params,
+                    response = requests.get('https://esaj.tjce.jus.br/cposg5/search.do', params=params,
                                             headers=headers)
+                    print(response.status_code)
+
                 else:
 
                     headers = {
@@ -345,3 +352,24 @@ class TjalSpider(scrapy.Spider):
         except TypeError:
             print(traceback.format_exc())
         yield doc
+
+
+class CustomHttpAdapter (requests.adapters.HTTPAdapter):
+    # "Transport adapter" that allows us to use custom ssl_context.
+
+    def __init__(self, ssl_context=None, **kwargs):
+        self.ssl_context = ssl_context
+        super().__init__(**kwargs)
+
+    def init_poolmanager(self, connections, maxsize, block=False):
+        self.poolmanager = urllib3.poolmanager.PoolManager(
+            num_pools=connections, maxsize=maxsize,
+            block=block, ssl_context=self.ssl_context)
+
+
+def get_legacy_session():
+    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
+    session = requests.session()
+    session.mount('https://', CustomHttpAdapter(ctx))
+    return session
