@@ -6,6 +6,7 @@ from scrapy.crawler import CrawlerProcess
 from fastapi import FastAPI
 from pydantic import BaseModel
 from project_scraper.spiders.my_spider import MySpiderSpider
+from project_scraper.spiders.tjal import TjalSpider
 from uvicorn import run
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
@@ -31,7 +32,7 @@ def main_fastapi(port, host):
 @click.option("--process-number", type=click.STRING, help="Process number to scrape data",
               default='0710802-55.2018.8.02.0001')
 @click.option("--output-path", type=click.STRING, help="Your local path to save files", default=".")
-def main_scraper(url: str, output_path: str):
+def main_scraper(process_number: str, output_path: str):
     """
     Main program execution.
     https://www.randomlists.com/urls
@@ -40,12 +41,13 @@ def main_scraper(url: str, output_path: str):
     docker run -it -v /path/to/local/folder:/data scrapy-image scrapy crawl spider_name -o /data/output.json
 
 
+    :param process_number:
     :param output_path:
     :type url: url to search
     :return: .json file
     """
     logging.debug(str(f"Initializing data collector"))
-    logging.info(str(f"Searching url: {url}"))
+    logging.info(str(f"Searching: {process_number}"))
     logging.info(str(f"Output path: {output_path}"))
 
     try:
@@ -76,7 +78,7 @@ def main_scraper(url: str, output_path: str):
 
                              )
 
-    process.crawl(MySpiderSpider, url)
+    process.crawl(TjalSpider, process_number)
     process.start()
 
 
