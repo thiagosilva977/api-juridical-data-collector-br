@@ -1,8 +1,10 @@
+import re
 import time
 import traceback
 
 import scrapy
 from bs4 import BeautifulSoup
+import requests
 
 
 class TjalSpider(scrapy.Spider):
@@ -17,14 +19,17 @@ class TjalSpider(scrapy.Spider):
     def start_requests(self):
         print(self._input_url)
 
-        urls_to_scrape = [str(f'https://www2.tjal.jus.br/cpopg/show.do?'
-                              f'processo.numero={self._input_url}'),
-                          str(f'https://www2.tjal.jus.br/cposg5/show.do?'
-                              f'processo.numero={self._input_url}')
-                          ]
+        """urls_to_scrape = [str(f'https://www2.tjal.jus.br/cpopg/show.do?'
+                              f'processo.numero={self._input_url}')]
 
         urls_to_scrape = [str(f'https://www2.tjal.jus.br/cpopg/show.do?'
                               f'processo.numero={self._input_url}'),
+                          ]"""
+
+        urls_to_scrape = [str(f'https://www2.tjal.jus.br/cposg5/show.do?'
+                              f'processo.numero={self._input_url}'),
+                          str(f'https://www2.tjal.jus.br/cpopg/show.do?'
+                              f'processo.numero={self._input_url}')
                           ]
 
         headers = {
@@ -43,8 +48,53 @@ class TjalSpider(scrapy.Spider):
         }
 
         for url in urls_to_scrape:
-            yield scrapy.Request(url=url,
-                                 headers=headers, callback=self.parse)
+            if 'cposg5' in url:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    # 'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                    'Referer': 'https://www2.tjal.jus.br/cposg5/open.do',
+                    # 'Cookie': 'JSESSIONID=4BA0DF23D4CAB01F441EC5D6E66B4BE3.cposg2',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
+                }
+
+                year_digit_unified = str(re.search(r"\d{7}-\d{2}\.\d{4}", self._input_url).group())
+                number_unified = self._input_url.split('.')[-1]
+
+                params = {
+                    'conversationId': '',
+                    'paginaConsulta': '0',
+                    'cbPesquisa': 'NUMPROC',
+                    'numeroDigitoAnoUnificado': year_digit_unified,
+                    'foroNumeroUnificado': number_unified,
+                    'dePesquisaNuUnificado': [
+                        self._input_url,
+                        'UNIFICADO',
+                    ],
+                    'dePesquisa': '',
+                    'tipoNuProcesso': 'UNIFICADO',
+                }
+
+                response = requests.get('https://www2.tjal.jus.br/cposg5/search.do', params=params,
+                                        headers=headers)
+
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                process_code = soup.find('input', {'id': 'processoSelecionado'})['value']
+
+                scrape_url = str(f"https://www2.tjal.jus.br/cposg5/show.do?processo.codigo={process_code}")
+                yield scrapy.Request(url=scrape_url,
+                                     headers=headers, callback=self.parse)
+            else:
+
+                yield scrapy.Request(url=url,
+                                     headers=headers, callback=self.parse)
 
     def parse(self, response, **kwargs):
         doc = {
@@ -66,38 +116,76 @@ class TjalSpider(scrapy.Spider):
             data_classe = soup.find('span', {'id': 'classeProcesso'})['title']
             print(data_classe)
             doc['classe'] = data_classe
-        except TypeError:
-            pass
+        except TypeError or AttributeError:
+            try:
+                data_classe = soup.find('div', {'id': 'classeProcesso'}).find_next('span')['title']
+                print(data_classe)
+                doc['classe'] = data_classe
+            except TypeError :
+                pass
+            except AttributeError:
+                pass
         try:
             data_assunto = soup.find('span', {'id': 'assuntoProcesso'})['title']
             print(data_assunto)
             doc['assunto'] = data_assunto
         except TypeError:
-            pass
+            try:
+                data_assunto = soup.find('div', {'id': 'assuntoProcesso'}).find_next('span')['title']
+                print(data_assunto)
+                doc['assunto'] = data_assunto
+            except TypeError :
+                pass
+            except AttributeError:
+                pass
 
         try:
             data_foro = soup.find('span', {'id': 'foroProcesso'})['title']
             print(data_foro)
             doc['foro'] = data_foro
         except TypeError:
-            pass
+            try:
+                data_foro = soup.find('div', {'id': 'foroProcesso'}).find_next('span')['title']
+                print(data_foro)
+                doc['foro'] = data_foro
+            except TypeError:
+                pass
+            except AttributeError:
+                pass
+
         try:
             data_vara = soup.find('span', {'id': 'varaProcesso'})['title']
             print(data_vara)
             doc['vara'] = data_vara
         except TypeError:
-            pass
+            try:
+                data_vara = soup.find('div', {'id': 'varaProcesso'}).find_next('span')['title']
+                print(data_vara)
+                doc['vara'] = data_vara
+            except TypeError:
+                pass
+            except AttributeError:
+                pass
+
         try:
             data_juiz = soup.find('span', {'id': 'juizProcesso'})['title']
             print(data_juiz)
             doc['juiz'] = data_juiz
         except TypeError:
-            pass
+            try:
+                data_juiz = soup.find('div', {'id': 'juizProcesso'}).find_next('span')['title']
+                print(data_juiz)
+                doc['juiz'] = data_juiz
+            except TypeError:
+                pass
+            except AttributeError:
+                pass
+
         try:
             data_area = soup.find('div', {'id': 'areaProcesso'}).find_next('span').text
             print(data_area)
             doc['area'] = data_area
-        except TypeError:
+        except TypeError or AttributeError:
             pass
 
         try:
@@ -106,12 +194,20 @@ class TjalSpider(scrapy.Spider):
             doc['data_distribuicao'] = data_distribuicao
         except TypeError:
             pass
+        except AttributeError or AttributeError:
+            pass
+
         try:
             data_valor = soup.find('div', {'id': 'valorAcaoProcesso'}).text
             print(data_valor)
             doc['valor_acao'] = data_valor
         except TypeError:
-            pass
+            try:
+                data_valor = soup.find('div', {'id': 'valorAcaoProcesso'}).find_next('span')['title']
+                print(data_valor)
+                doc['valor_acao'] = data_valor
+            except TypeError:
+                pass
 
         try:
             table_partes = soup.find('table', {'id': 'tableTodasPartes'})
@@ -133,7 +229,7 @@ class TjalSpider(scrapy.Spider):
                         if 'Advogada:' in current_text:
                             current_text = current_text.split('Advogada:')
                             for item in current_text:
-                                advogados.append(item)
+                                advogados.append(item.strip())
                         else:
                             advogados.append(current_text)
 
@@ -160,7 +256,7 @@ class TjalSpider(scrapy.Spider):
                     descricao_movimento = None
                     status_movimento = descricao.text.strip()
                 else:
-                    descricao_movimento = italic_text.replace('\n', ' ').replace('\r', '')
+                    descricao_movimento = italic_text.replace('\n', ' ').replace('\r', '').strip()
 
                     status_movimento = str(descricao).split('">')[1].split('<br/>')[0].strip()
 
