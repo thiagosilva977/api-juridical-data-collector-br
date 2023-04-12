@@ -20,6 +20,15 @@ ITEM_PIPELINES = {
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
+CONCURRENT_ITEMS = 32
+CONCURRENT_REQUESTS_PER_DOMAIN = 16
+CONCURRENT_REQUESTS_PER_IP = 16
+DOWNLOAD_TIMEOUT = 6
+FEED_EXPORT_ENCODING = 'utf-8',
+
+FEED_FORMAT = 'json'
+FEED_URI = 'result.json'
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
 

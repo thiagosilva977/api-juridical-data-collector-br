@@ -10,9 +10,6 @@ setup:
 
 # Uninstall project dependencies
 unsetup:
-	pip3 uninstall -y someexternalprojectname
-
-
 	rm -f make_setup
 
 # Use this only in private projects

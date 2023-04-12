@@ -28,12 +28,11 @@ class TjalSpider(scrapy.Spider):
         urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cpopg/show.do?'
                               f'processo.numero={self._input_url}'),
                           str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
+                              f'processo.numero={self._input_url}'),
+                          str(f'https://www2.tjal.jus.br/cposg5/show.do?'
+                              f'processo.numero={self._input_url}'),
+                          str(f'https://www2.tjal.jus.br/cpopg/show.do?'
                               f'processo.numero={self._input_url}')
-                          ]
-
-        urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
-                              f'processo.numero={self._input_url}')
-
                           ]
 
         for url in urls_to_scrape:

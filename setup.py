@@ -11,7 +11,7 @@ setup(
     description='Some description.',
     setup_requires=['wheel'],
     install_requires=[
-        "click>=8.1.2",
+        "click>=8.1.3",
         "setuptools>=62.1.0",
         "urllib3>=1.26.15",
         "requests>=2.27.1",
