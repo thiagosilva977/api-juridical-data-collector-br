@@ -30,6 +30,8 @@ Para este processo, foi utilizado:
 - **Docker** para uma boa portabilidade, sendo possível de ser executado em qualquer máquina e mantendo eficiência e escalabilidade.
 - **Click** para decorators de funções.
 - **Regex e BS4** para parsing dos dados.
+- **Makefile** para automatizar o processo de configuraç.
+
 
 ### Principais funções
 - **project_scraper/main.py**
