@@ -1,10 +1,6 @@
 import re
-import ssl
-import time
 
-import requests
 import scrapy
-import urllib3
 from bs4 import BeautifulSoup
 
 
@@ -19,13 +15,6 @@ class TjalSpider(scrapy.Spider):
 
     def start_requests(self):
         print(self._input_url)
-
-        """urls_to_scrape = [str(f'https://www2.tjal.jus.br/cposg5/show.do?'
-                              f'processo.numero={self._input_url}'),
-                          str(f'https://www2.tjal.jus.br/cpopg/show.do?'
-                              f'processo.numero={self._input_url}')
-                          ]"""
-
         urls_to_scrape = [str(f'https://esaj.tjce.jus.br/cpopg/show.do?'
                               f'processo.numero={self._input_url}'),
                           str(f'https://esaj.tjce.jus.br/cposg5/show.do?'
@@ -61,14 +50,13 @@ class TjalSpider(scrapy.Spider):
                                              f'dePesquisaNuUnificado=UNIFICADO&dePesquisa=&tipoNuProcesso=UNIFICADO'),
                                          callback=self.get_tjce_request)
 
-
-
             else:
 
                 if 'esaj.tjce' in url:
                     headers = {
                         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,'
+                                  '*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
                         # 'Accept-Encoding': 'gzip, deflate, br',
                         'Connection': 'keep-alive',
@@ -83,7 +71,8 @@ class TjalSpider(scrapy.Spider):
                 else:
                     headers = {
                         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,'
+                                  '*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
                         # 'Accept-Encoding': 'gzip, deflate, br',
                         'Referer': 'https://www2.tjal.jus.br/cpopg/open.do',
@@ -99,15 +88,13 @@ class TjalSpider(scrapy.Spider):
                     yield scrapy.Request(url=url,
                                          headers=headers, callback=self.parse)
 
-    def get_tjce_request(self, response, **kwargs):
+    def get_tjce_request(self, response):
 
-        print(response)
         if 'esaj.tjce.jus.br' in str(response.url):
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
-                # 'Accept-Encoding': 'gzip, deflate, br',
                 'Connection': 'keep-alive',
                 'Referer': 'https://esaj.tjce.jus.br/cposg5/open.do',
                 'Upgrade-Insecure-Requests': '1',
@@ -133,7 +120,6 @@ class TjalSpider(scrapy.Spider):
                 # 'Accept-Encoding': 'gzip, deflate, br',
                 'Referer': 'https://www2.tjal.jus.br/cpopg/open.do',
                 'Connection': 'keep-alive',
-                # 'Cookie': 'JSESSIONID=EB24AC9E02F1B0D2992C53E9510786DB.cpopg3',
                 'Upgrade-Insecure-Requests': '1',
                 'Sec-Fetch-Dest': 'document',
                 'Sec-Fetch-Mode': 'navigate',
@@ -175,14 +161,12 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_classe = soup.find('span', {'id': 'classeProcesso'})['title']
-            print(data_classe)
             doc['classe'] = data_classe
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_classe = soup.find('div', {'id': 'classeProcesso'}).find_next('span')['title']
-                print(data_classe)
                 doc['classe'] = data_classe
             except TypeError:
                 pass
@@ -190,14 +174,12 @@ class TjalSpider(scrapy.Spider):
                 pass
         try:
             data_assunto = soup.find('span', {'id': 'assuntoProcesso'})['title']
-            print(data_assunto)
             doc['assunto'] = data_assunto
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_assunto = soup.find('div', {'id': 'assuntoProcesso'}).find_next('span')['title']
-                print(data_assunto)
                 doc['assunto'] = data_assunto
             except TypeError:
                 pass
@@ -206,14 +188,12 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_foro = soup.find('span', {'id': 'foroProcesso'})['title']
-            print(data_foro)
             doc['foro'] = data_foro
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_foro = soup.find('div', {'id': 'foroProcesso'}).find_next('span')['title']
-                print(data_foro)
                 doc['foro'] = data_foro
             except TypeError:
                 pass
@@ -222,14 +202,12 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_vara = soup.find('span', {'id': 'varaProcesso'})['title']
-            print(data_vara)
             doc['vara'] = data_vara
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_vara = soup.find('div', {'id': 'varaProcesso'}).find_next('span')['title']
-                print(data_vara)
                 doc['vara'] = data_vara
             except TypeError:
                 pass
@@ -238,14 +216,12 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_juiz = soup.find('span', {'id': 'juizProcesso'})['title']
-            print(data_juiz)
             doc['juiz'] = data_juiz
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_juiz = soup.find('div', {'id': 'juizProcesso'}).find_next('span')['title']
-                print(data_juiz)
                 doc['juiz'] = data_juiz
             except TypeError:
                 pass
@@ -254,7 +230,6 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_area = soup.find('div', {'id': 'areaProcesso'}).find_next('span').text
-            print(data_area)
             doc['area'] = data_area
         except TypeError:
             pass
@@ -263,7 +238,6 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_distribuicao = soup.find('div', {'id': 'dataHoraDistribuicaoProcesso'}).text
-            print(data_distribuicao)
             doc['data_distribuicao'] = data_distribuicao
         except TypeError:
             pass
@@ -272,14 +246,12 @@ class TjalSpider(scrapy.Spider):
 
         try:
             data_valor = soup.find('div', {'id': 'valorAcaoProcesso'}).text
-            print(data_valor)
             doc['valor_acao'] = data_valor
         except AttributeError:
             pass
         except TypeError:
             try:
                 data_valor = soup.find('div', {'id': 'valorAcaoProcesso'}).find_next('span')['title']
-                print(data_valor)
                 doc['valor_acao'] = data_valor
             except TypeError:
                 pass
@@ -296,8 +268,6 @@ class TjalSpider(scrapy.Spider):
                 advogados = []
 
                 list_split = tr.text.split('Advogado:')
-                # print(list_split)
-                # print(len(list_split))
                 for i in range(len(list_split)):
                     if i == 0:
                         pass
@@ -352,24 +322,3 @@ class TjalSpider(scrapy.Spider):
         except AttributeError:
             pass
         yield doc
-
-
-class CustomHttpAdapter(requests.adapters.HTTPAdapter):
-    # "Transport adapter" that allows us to use custom ssl_context.
-
-    def __init__(self, ssl_context=None, **kwargs):
-        self.ssl_context = ssl_context
-        super().__init__(**kwargs)
-
-    def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = urllib3.poolmanager.PoolManager(
-            num_pools=connections, maxsize=maxsize,
-            block=block, ssl_context=self.ssl_context)
-
-
-def get_legacy_session():
-    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
-    session = requests.session()
-    session.mount('https://', CustomHttpAdapter(ctx))
-    return session

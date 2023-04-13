@@ -6,7 +6,6 @@ import os
 import random
 import re
 import string
-import subprocess
 from pathlib import Path
 
 import click
@@ -25,23 +24,29 @@ app = FastAPI()
 
 @app.post("/consulta_processo")
 @app.get("/consulta_processo")
-async def consulta_processo(data: dict):
-    print('data_received: ', data)
+async def consulta_processo(data_received: dict):
+    """
+    Manages the consulta_processo endpoint execution.
+
+    :param data_received: received dict from request.
+    :return: dict with results
+    """
+    logging.info(str(f'data_received: {data_received})'))
+    data_received['numero_processo'] = str(data_received['numero_processo'])
     data_to_return = {'search_status': 'notfound',
                       'description': '',
                       'data': []}
     pattern = r'\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{1,2}\.\d{4}'
-    matches = re.findall(pattern, data['numero_processo'])
-    print(matches)
+    matches = re.findall(pattern, data_received['numero_processo'])
+    logging.info(str(f"matches found: {len(matches)}"))
     if not matches:
         data_to_return['search_status'] = 'value_error'
-        data_to_return['description'] = str(f"Value {data['numero_processo']} doesnt match the pattern.")
+        data_to_return['description'] = str(f"Value {data_received['numero_processo']} doesnt match the pattern.")
     else:
         if len(matches) == 1:
             instance_code = generate_random_code()
             mp = multiprocessing.Process(target=main_scraper,
-                                         args=(data['numero_processo'], '.',
-                                               instance_code))
+                                         args=(data_received['numero_processo'], instance_code))
             mp.start()
             mp.join()
             output_path = Path.cwd()
@@ -57,8 +62,7 @@ async def consulta_processo(data: dict):
                 instance_code = generate_random_code()
                 all_instance_code.append(instance_code)
                 mpx = multiprocessing.Process(target=main_scraper,
-                                              args=(item, '.',
-                                                    instance_code))
+                                              args=(item, instance_code))
                 all_mps.append(mpx)
 
             for mp in all_mps:
@@ -77,7 +81,7 @@ async def consulta_processo(data: dict):
             data = data_to_return
 
     result = data
-    
+
     return result
 
 
@@ -85,30 +89,34 @@ async def consulta_processo(data: dict):
 @click.option("--port", default=5000, help="Port number to use.")
 @click.option("--host", default='0.0.0.0', help="Host number to use.")
 def main_fastapi(port, host):
+    """
+    Main execution of fastapi. Initializes the API.
+
+    :param port: Selected port to API
+    :param host: Selected host to API
+    :return:
+    """
     run(app, port=port, host=host)
 
 
 @click.command("crawl-process")
 @click.option("--process-number", type=click.STRING, help="Process number to scrape data",
               default='0070337-91.2008.8.06.0001')
-@click.option("--output-path", type=click.STRING, help="Your local path to save files", default=".")
-def main_scraper_click(process_number: str, output_path: str):
-    main_scraper(process_number=process_number, output_path=output_path,
-                 instance_code='testfile')
-
-
-def main_scraper(process_number: str, output_path: str, instance_code: str):
+def main_scraper_click(process_number: str):
     """
-    Main program execution.
-    https://www.randomlists.com/urls
+    Initialize crawl process using click options.
+    :param process_number: Juridical number.
+    :return:
+    """
+    main_scraper(process_number=process_number, instance_code='testfile')
 
-    bash to output docker files
-    docker run -it -v /path/to/local/folder:/data scrapy-image scrapy crawl spider_name -o /data/output.json
 
+def main_scraper(process_number: str, instance_code: str):
+    """
+    Main program execution. Manage the process of crawl.
 
-    :param instance_code:
-    :param process_number:
-    :param output_path:
+    :param instance_code: some random code to instances be different.
+    :param process_number: Number of juridical process.
     :return: .json file
     """
     output_path = Path.cwd()
@@ -125,11 +133,6 @@ def main_scraper(process_number: str, output_path: str, instance_code: str):
         os.remove(feed_uri)
     except FileNotFoundError:
         pass
-    """empty_dict = {}
-    to_save_file = str(''+str(feed_uri))
-    with open(to_save_file, 'w') as f:
-        json.dump(empty_dict, f)"""
-
     pattern = r'\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{1,2}\.\d{4}'
     matches = re.findall(pattern, process_number)
     print(matches)
@@ -153,7 +156,8 @@ def main_scraper(process_number: str, output_path: str, instance_code: str):
                                                'FEED_FORMAT': 'json',
                                                'FEED_URI': feed_uri,
                                                'SPIDER_MODULES': ['project_scraper.spiders'],
-                                               'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor',
+                                               'TWISTED_REACTOR': 'twisted.internet.asyncioreactor'
+                                                                  '.AsyncioSelectorReactor',
                                                'ITEM_PIPELINES': {
                                                    'project_scraper.pipelines.ProjectScraperPipeline': 300,
                                                }
@@ -162,11 +166,8 @@ def main_scraper(process_number: str, output_path: str, instance_code: str):
                                      )
             # prevent error: https://stackoverflow.com/questions/74380442/
             # error-twisted-internet-error-reactornotrestartable
-            results = []
             process.crawl(TjalSpider, item)
             process.start()
-            """subprocess.call([f'scrapy crawl tjal -a input_process=' + item + ''], shell=True,
-                            cwd=str(''))"""
 
     try:
         with open(feed_uri, 'r') as file:
@@ -204,5 +205,4 @@ def generate_random_code(length=4):
 
 
 if __name__ == '__main__':
-    # main_scraper_click()
     main_fastapi()

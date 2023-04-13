@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='scrapertype_scrapername',
+    name='extracao_dados_juridicos',
     version='1.0.0',
     packages=find_packages(),
-    url='',
+    url='https://github.com/thiagosilva977/api-extracao-dados-juridicos',
     license='',
     author='Thiago Silva',
-    author_email='someemail@email.com',
-    description='Some description.',
+    author_email='thiagosilva977@hotmail.com',
+    description='Inicializa uma api para extrair processos juridicos.',
     setup_requires=['wheel'],
     install_requires=[
         "click>=8.1.3",
