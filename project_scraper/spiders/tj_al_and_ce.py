@@ -1,5 +1,6 @@
 import re
 import ssl
+import time
 
 import requests
 import scrapy
@@ -159,9 +160,17 @@ class TjalSpider(scrapy.Spider):
             'juiz': None,
             'valor_acao': None,
             'partes_processo': None,
-            'lista_movimentacoes': None
+            'lista_movimentacoes': None,
+            'url_processo': None
         }
 
+        try:
+            response_url = str(response.request.url)
+            doc['url_processo'] = response_url
+        except AttributeError:
+            pass
+        except TypeError:
+            pass
         soup = BeautifulSoup(response.text, 'html.parser')
 
         try:

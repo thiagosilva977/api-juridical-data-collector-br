@@ -7,17 +7,15 @@ import random
 import re
 import string
 import subprocess
-import time
 from pathlib import Path
 
 import click
-from scrapy.crawler import CrawlerProcess
-from fastapi import FastAPI
-from pydantic import BaseModel
-from project_scraper.spiders.my_spider import MySpiderSpider
-from project_scraper.spiders.tj_al_and_ce import TjalSpider
-from uvicorn import run
 import nest_asyncio
+from fastapi import FastAPI
+from scrapy.crawler import CrawlerProcess
+from uvicorn import run
+
+from project_scraper.spiders.tj_al_and_ce import TjalSpider
 
 nest_asyncio.apply()
 
@@ -26,25 +24,60 @@ app = FastAPI()
 
 
 @app.post("/consulta_processo")
+@app.get("/consulta_processo")
 async def consulta_processo(data: dict):
     print('data_received: ', data)
-    instance_code = generate_random_code()
-    mp = multiprocessing.Process(target=main_scraper,
-                                 args=(data['numero_processo'], '.',
-                                       instance_code))
-    """result = main_scraper(process_number=data['numero_processo'],
-                          output_path='.')"""
-    mp.start()
-    mp.join()
-    output_path = Path.cwd()
-    file_to_found = glob.glob(str(f"{output_path}/*{instance_code}.json"))
-    with open(file_to_found[0], 'r') as file:
-        data = json.load(file)
+    data_to_return = {'search_status': 'notfound',
+                      'description': '',
+                      'data': []}
+    pattern = r'\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{1,2}\.\d{4}'
+    matches = re.findall(pattern, data['numero_processo'])
+    print(matches)
+    if not matches:
+        data_to_return['search_status'] = 'value_error'
+        data_to_return['description'] = str(f"Value {data['numero_processo']} doesnt match the pattern.")
+    else:
+        if len(matches) == 1:
+            instance_code = generate_random_code()
+            mp = multiprocessing.Process(target=main_scraper,
+                                         args=(data['numero_processo'], '.',
+                                               instance_code))
+            mp.start()
+            mp.join()
+            output_path = Path.cwd()
+            file_to_found = glob.glob(str(f"{output_path}/*{instance_code}.json"))
+            with open(file_to_found[0], 'r') as file:
+                data = json.load(file)
+        else:
+            data_to_return['description'] = f'Collected {len(matches)} values.'
+            all_instance_code = []
+            all_mps = []
+            all_results = []
+            for item in matches:
+                instance_code = generate_random_code()
+                all_instance_code.append(instance_code)
+                mpx = multiprocessing.Process(target=main_scraper,
+                                              args=(item, '.',
+                                                    instance_code))
+                all_mps.append(mpx)
+
+            for mp in all_mps:
+                mp.start()
+            for mp in all_mps:
+                mp.join()
+
+            output_path = Path.cwd()
+            for current_instance in all_instance_code:
+                files_to_found = glob.glob(str(f"{output_path}/*{current_instance}.json"))
+                with open(files_to_found[0], 'r') as file:
+                    data = json.load(file)
+                    all_results.append(data)
+            data_to_return['search_status'] = 'success'
+            data_to_return['data'] = all_results
+            data = data_to_return
 
     result = data
-
-    # result = {"mensagem": "Processo consultado com sucesso", "numero_processo": data['numero_processo']}
-
+    
     return result
 
 
@@ -60,11 +93,11 @@ def main_fastapi(port, host):
               default='0070337-91.2008.8.06.0001')
 @click.option("--output-path", type=click.STRING, help="Your local path to save files", default=".")
 def main_scraper_click(process_number: str, output_path: str):
-    process = subprocess.Popen(main_scraper(process_number=process_number, output_path=output_path,
-                                            instance_code='testfile'))
+    main_scraper(process_number=process_number, output_path=output_path,
+                 instance_code='testfile')
 
 
-def main_scraper(process_number: str, output_path: str, instance_code:str):
+def main_scraper(process_number: str, output_path: str, instance_code: str):
     """
     Main program execution.
     https://www.randomlists.com/urls
@@ -151,7 +184,7 @@ def main_scraper(process_number: str, output_path: str, instance_code:str):
     except FileNotFoundError:
         pass
 
-    print(data_to_return,'xxsdfsdfsdfsdfs')
+    print(data_to_return, 'xxsdfsdfsdfsdfs')
     to_save_file = str(f"{output_path}/resultfile_{instance_code}.json")
     with open(to_save_file, 'w') as f:
         json.dump(data_to_return, f)
@@ -171,4 +204,5 @@ def generate_random_code(length=4):
 
 
 if __name__ == '__main__':
+    # main_scraper_click()
     main_fastapi()
