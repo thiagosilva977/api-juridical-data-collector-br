@@ -185,7 +185,7 @@ def main_scraper(process_number: str, instance_code: str):
     except FileNotFoundError:
         pass
 
-    print(data_to_return, 'xxsdfsdfsdfsdfs')
+    print(data_to_return)
     to_save_file = str(f"{output_path}/resultfile_{instance_code}.json")
     with open(to_save_file, 'w') as f:
         json.dump(data_to_return, f)
