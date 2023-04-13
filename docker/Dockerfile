@@ -35,3 +35,5 @@ ENV PATH="/home/runner/venv/bin:$PATH"
 # Expose ports for fastapi
 EXPOSE 5000
 EXPOSE 8000
+EXPOSE 8002
+EXPOSE 5002

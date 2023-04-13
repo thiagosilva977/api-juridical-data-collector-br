@@ -117,7 +117,6 @@ class TjalSpider(scrapy.Spider):
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
-                # 'Accept-Encoding': 'gzip, deflate, br',
                 'Referer': 'https://www2.tjal.jus.br/cpopg/open.do',
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
@@ -135,6 +134,15 @@ class TjalSpider(scrapy.Spider):
                                  headers=headers, callback=self.parse)
 
     def parse(self, response, **kwargs):
+        """
+        Unified parsing for many sources of data.
+        Also, I'm using some variables in portuguese to
+        the process of parsing be clearer.
+
+        :param response: scrapy response
+        :param kwargs: future args
+        :return: parsed data
+        """
         doc = {
             'process_number': self._input_url,
             'classe': None,
