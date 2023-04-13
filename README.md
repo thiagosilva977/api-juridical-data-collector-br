@@ -52,6 +52,7 @@ Para este processo, foi utilizado:
 - É possível também solicitar uma lista de números de processos, seja ela uma lista, uma lista em forma de string, ou até mesmo
 como um dado não estruturado. 
 - Enviar requisição POST ou GET possuem o mesmo efeito.
+- **Portas**: O programa está configurado para receber requisições nas portas **5000** e **8000**.
 
 
 #### Exemplo de requisição
