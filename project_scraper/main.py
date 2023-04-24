@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from scrapy.crawler import CrawlerProcess
 from uvicorn import run
 
-from project_scraper.spiders.tj_al_and_ce import TjalSpider
+from project_scraper.spiders.tjal_and_tjce import TjalAndTjceSpider
 
 nest_asyncio.apply()
 
@@ -166,7 +166,7 @@ def main_scraper(process_number: str, instance_code: str):
                                      )
             # prevent error: https://stackoverflow.com/questions/74380442/
             # error-twisted-internet-error-reactornotrestartable
-            process.crawl(TjalSpider, item)
+            process.crawl(TjalAndTjceSpider, item)
             process.start()
 
     try:

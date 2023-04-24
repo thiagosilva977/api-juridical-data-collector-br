@@ -4,7 +4,7 @@ import scrapy
 from bs4 import BeautifulSoup
 
 
-class TjalSpider(scrapy.Spider):
+class TjalAndTjceSpider(scrapy.Spider):
     def __init__(self, input_process=None, **kwargs):
         super().__init__(**kwargs)
         self._input_url = input_process
