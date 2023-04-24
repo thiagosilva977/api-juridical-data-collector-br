@@ -30,7 +30,7 @@ Para este processo, foi utilizado:
 - **Docker** para uma boa portabilidade, sendo possível de ser executado em qualquer máquina e mantendo eficiência e escalabilidade.
 - **Click** para decorators de funções.
 - **Regex e BS4** para parsing dos dados.
-- **Makefile** para automatizar o processo de configuraç.
+- **Makefile** para automatizar o processo de configuração.
 
 
 ### Principais funções
@@ -51,6 +51,10 @@ Para este processo, foi utilizado:
 
 #### Executar uma coleta de teste
 `docker run thiago977/thiagosilva_consulta_juridica:latest crawl-process`
+
+## Makefile
+### do_all
+`make do_all` configura e sobe a imagem docker para o docker registry.
 
 ## Uso da API
 - Usamos o endpoint `/consulta_processo` para realizar a extração dos dados
